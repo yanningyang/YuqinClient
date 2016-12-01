@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10116" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="CellForSelectAddress" id="Iel-dY-5q4" customClass="SelectAddressTableViewCell" customModule="YuQinClient" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="Iel-dY-5q4" id="2pW-3x-ADe">
+                <rect key="frame" x="0.0" y="0.0" width="320" height="43"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="IconPoint" translatesAutoresizingMaskIntoConstraints="NO" id="uxr-DP-fZw">
+                        <rect key="frame" x="10" y="12" width="16" height="20"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="16" id="0HD-oM-BOM"/>
+                            <constraint firstAttribute="height" constant="20" id="wls-GZ-Msi"/>
+                        </constraints>
+                    </imageView>
+                    <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="重庆" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SIh-NO-kW5">
+                        <rect key="frame" x="36" y="13" width="0.0" height="18"/>
+                        <constraints>
+                            <constraint firstAttribute="width" id="2tW-y7-w1p"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                        <color key="textColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="请选择上车地点" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pMX-2z-cDm">
+                        <rect key="frame" x="41" y="13" width="105" height="18"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                        <color key="textColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="he3-4H-DNi">
+                        <rect key="frame" x="280" y="0.0" width="40" height="43"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="40" id="N0R-OG-pQL"/>
+                        </constraints>
+                        <state key="normal" title="⭐️"/>
+                    </button>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="HOK-JY-mlv">
+                        <rect key="frame" x="279" y="5" width="1" height="33"/>
+                        <color key="backgroundColor" red="0.73333333329999995" green="0.73333333329999995" blue="0.73333333329999995" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="1" id="KRP-Gh-fgd"/>
+                            <constraint firstAttribute="width" constant="1" id="VQy-nA-V6P" customClass="IBDesignableOnePixelConstant" customModule="YuQinClient" customModuleProvider="target">
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="onePixelConstant">
+                                        <real key="value" value="1"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </constraint>
+                        </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="VQy-nA-V6P"/>
+                            </mask>
+                        </variation>
+                        <variation key="heightClass=regular-widthClass=compact">
+                            <mask key="constraints">
+                                <include reference="VQy-nA-V6P"/>
+                            </mask>
+                        </variation>
+                    </view>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="SIh-NO-kW5" firstAttribute="centerY" secondItem="uxr-DP-fZw" secondAttribute="centerY" id="0Fl-3k-B9B"/>
+                    <constraint firstItem="pMX-2z-cDm" firstAttribute="leading" secondItem="SIh-NO-kW5" secondAttribute="trailing" constant="5" id="4AG-vA-0Hb"/>
+                    <constraint firstAttribute="bottom" secondItem="HOK-JY-mlv" secondAttribute="bottom" constant="5" id="IJ1-hY-ezc"/>
+                    <constraint firstItem="uxr-DP-fZw" firstAttribute="centerY" secondItem="2pW-3x-ADe" secondAttribute="centerY" id="JwK-fa-1YY"/>
+                    <constraint firstItem="HOK-JY-mlv" firstAttribute="top" secondItem="2pW-3x-ADe" secondAttribute="top" constant="5" id="NZI-bx-uyb"/>
+                    <constraint firstItem="he3-4H-DNi" firstAttribute="leading" secondItem="HOK-JY-mlv" secondAttribute="trailing" id="YsB-nx-kss"/>
+                    <constraint firstItem="he3-4H-DNi" firstAttribute="top" secondItem="2pW-3x-ADe" secondAttribute="top" id="f0c-IL-SjD"/>
+                    <constraint firstItem="uxr-DP-fZw" firstAttribute="leading" secondItem="2pW-3x-ADe" secondAttribute="leading" constant="10" id="gkd-Oq-iKs"/>
+                    <constraint firstAttribute="bottom" secondItem="he3-4H-DNi" secondAttribute="bottom" id="gtv-6O-YDL"/>
+                    <constraint firstItem="pMX-2z-cDm" firstAttribute="centerY" secondItem="uxr-DP-fZw" secondAttribute="centerY" id="hGh-ni-N1Y"/>
+                    <constraint firstAttribute="trailing" secondItem="he3-4H-DNi" secondAttribute="trailing" id="kQp-oY-QV8"/>
+                    <constraint firstItem="SIh-NO-kW5" firstAttribute="leading" secondItem="uxr-DP-fZw" secondAttribute="trailing" constant="10" id="ynw-vz-7lL"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="button" destination="he3-4H-DNi" id="EAJ-ip-a1Y"/>
+                <outlet property="label1" destination="SIh-NO-kW5" id="8TG-l5-UBg"/>
+                <outlet property="label2" destination="pMX-2z-cDm" id="5S5-0L-CsJ"/>
+            </connections>
+            <point key="canvasLocation" x="215" y="171"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="IconPoint" width="19" height="23"/>
+    </resources>
+</document>
