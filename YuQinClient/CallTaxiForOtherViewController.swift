@@ -8,9 +8,10 @@
 
 import UIKit
 import AddressBookUI
+import ContactsUI
 import pop
 
-class CallTaxiForOtherViewController: UIViewController, ABPeoplePickerNavigationControllerDelegate {
+class CallTaxiForOtherViewController: UIViewController, ABPeoplePickerNavigationControllerDelegate, CNContactPickerDelegate {
 
     @IBOutlet weak var customerNameTextField: UITextField!
     @IBOutlet weak var customerPhoneNumTextField: UITextField!
@@ -18,8 +19,6 @@ class CallTaxiForOtherViewController: UIViewController, ABPeoplePickerNavigation
     @IBOutlet weak var checkBoxBtn: UIButton!
     
     var identifier: String!
-    
-    var peoplePicker: ABPeoplePickerNavigationController!
     
     var keyboardHeight: CGFloat = 250
     
@@ -55,6 +54,14 @@ class CallTaxiForOtherViewController: UIViewController, ABPeoplePickerNavigation
         super.didReceiveMemoryWarning()
     }
     
+    @available(iOS 9.0, *)
+    func contactPicker(picker: CNContactPickerViewController, didSelectContactProperty contactProperty: CNContactProperty) {
+        let familyName = contactProperty.contact.familyName
+        let givenName = contactProperty.contact.givenName
+        self.customerNameTextField.text = familyName + givenName
+        self.customerPhoneNumTextField.text = (contactProperty.value as! CNPhoneNumber).stringValue
+    }
+    
     func peoplePickerNavigationController(peoplePicker: ABPeoplePickerNavigationController, didSelectPerson person: ABRecord, property: ABPropertyID, identifier: ABMultiValueIdentifier) {
         
         if let personPhoneProperty = ABRecordCopyValue(person, kABPersonPhoneProperty) {
@@ -81,14 +88,17 @@ class CallTaxiForOtherViewController: UIViewController, ABPeoplePickerNavigation
     // MARK - Action
     
     @IBAction func addressBookBtnAction(sender: UIButton) {
-        peoplePicker = ABPeoplePickerNavigationController()
-        peoplePicker.peoplePickerDelegate = self
-//        peoplePicker.navigationBar.barTintColor = UIColor(red: 34.0/255.0, green: 189.0/255.0, blue: 246.0/255.0, alpha: 1)
-//        peoplePicker.navigationBar.tintColor = UIColor.whiteColor()
-//        let navigationTitleAttribute: NSDictionary = NSDictionary(object: UIColor.whiteColor(), forKey: NSForegroundColorAttributeName)
-//        peoplePicker.navigationBar.titleTextAttributes = navigationTitleAttribute as? [String : AnyObject]
-        
-        self.presentViewController(peoplePicker, animated: true, completion: nil)
+        if #available(iOS 9, *) {
+            let contactPicker = CNContactPickerViewController()
+            contactPicker.delegate = self
+            
+            self.presentViewController(contactPicker, animated: true, completion: nil)
+        } else {
+            let peoplePicker = ABPeoplePickerNavigationController()
+            peoplePicker.peoplePickerDelegate = self
+            
+            self.presentViewController(peoplePicker, animated: true, completion: nil)
+        }
     }
     
     func checkboxViewClick(sender: UITapGestureRecognizer) {
@@ -100,13 +110,11 @@ class CallTaxiForOtherViewController: UIViewController, ABPeoplePickerNavigation
     }
     
     func onClickLeftBarBtn(sender: UIBarButtonItem) {
-        print("left bar btn is clicked")
         self.navigationController?.popViewControllerAnimated(true)
     }
     
     var flag = true
     func onClickRightBarBtn(sender: UIBarButtonItem) {
-        print("right bar btn is clicked")
         
         let name = customerNameTextField.text
         let phone = customerPhoneNumTextField.text

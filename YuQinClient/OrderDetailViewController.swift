@@ -110,40 +110,12 @@ class OrderDetailViewController: UIViewController, UITableViewDataSource, UITabl
         guard orderId != nil else {
             return
         }
-        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
-            return
-        }
         
-        //url和参数
-        let url = Constant.HOST_PATH + "/OrderApp_getOrdersInfo.action"
-        let parameters = ["phoneNumber" : phoneNumber,
-                          "validationCode" : validationCode,
-                          "orderId" : orderId]
-        
-        Alamofire.request(.GET, url, parameters: parameters as? [String : AnyObject])
-            .responseJSON { response in
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("get order detail by Id result: \(value)")
-                    
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
-                        
-                    } else if let dataDict = value as? Dictionary<String, AnyObject> {
-                        
-                        self.loadData(dataDict)
-                    }
-                    
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
-                }
-        }
+        URLConnector.request(Router.getOrdersInfo(orderId: "\(orderId)"), successCallBack: { value in
+            if let dataDict = value.dictionaryObject {
+                self.loadData(dataDict)
+            }
+        })
     }
 
 }

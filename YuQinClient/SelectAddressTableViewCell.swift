@@ -11,7 +11,7 @@ import UIKit
 class SelectAddressTableViewCell: UITableViewCell {
 
     @IBOutlet weak var label1: UILabel!
-    @IBOutlet weak var label2: UILabel!
+    @IBOutlet weak var textField: UITextField!
     @IBOutlet weak var button: UIButton!
     override func awakeFromNib() {
         super.awakeFromNib()

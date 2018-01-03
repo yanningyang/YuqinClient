@@ -15,17 +15,6 @@ public class Tools {
     //私有化init方法，保证单例
     private init(){}
     
-    //获取Baidu资源路径
-    public func getBaiduMapBundlePath(filename: String) ->String? {
-        var ret: String?
-        let myBundlePath: String = (NSBundle.mainBundle().resourcePath?.stringByAppendingString("/" + Constant.MYBUNDLE_NAME))!
-        let libBundle: NSBundle = NSBundle(path: myBundlePath)!
-        if !filename.isEmpty {
-            ret = (libBundle.resourcePath?.stringByAppendingString("/" + filename))!
-        }
-        return ret
-    }
-    
     //获取登录用户的帐号密码
     public func getUserInfo() ->(String?, String?)? {
         let userDefault = NSUserDefaults.standardUserDefaults()
@@ -139,46 +128,62 @@ public class Tools {
     
     func getCustomerInfoFromNet() {
         
-        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
-            return
-        }
-        //url和参数
-        let url = Constant.HOST_PATH + "/OrderApp_getCustomerInfo.action"
-        let parameters = ["phoneNumber" : phoneNumber, "validationCode" : validationCode, "keyword" : ""]
-        
-        Alamofire.request(.GET, url, parameters: parameters)
-            .responseJSON { response in
+        URLConnector.request(Router.getCustomerInfo, successCallBack: { value in
+            if let dict = value.dictionary {
+                let name = dict["name"]?.string ?? ""
+                let organizationName = dict["organizationName"]?.string ?? ""
+                let gender = dict["gender"]?.string ?? ""
                 
-                switch (response.result) {
-                case .Success(let value):
-                    print("get user info result: \(value)")
-                    
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
-                        
-                    } else if let dict = value as? NSDictionary {
-                        
-                        let name = dict["name"] as! String
-                        let organizationName = dict["organizationName"] as! String
-                        let gender = dict["gender"] as! String
-                        
-                        let userDefaults = NSUserDefaults.standardUserDefaults()
-                        userDefaults.setObject(name, forKey: Constant.KeyForCustomerName)
-                        userDefaults.setObject(organizationName, forKey: Constant.KeyForCustomerOrganizationName)
-                        userDefaults.setObject(gender == "male" ? "男" : "女", forKey: Constant.KeyForCustomerGender)
-                        userDefaults.synchronize()
-                        
-                        NSNotificationCenter.defaultCenter().postNotificationName(Constant.DidGetCustomerInfoNofification, object: nil, userInfo: ["name" : name, "organizationName" : organizationName, "gender" : gender, ])
-                    }
-                    
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
-                }
-        }
+                let userDefaults = NSUserDefaults.standardUserDefaults()
+                userDefaults.setObject(name, forKey: Constant.KeyForCustomerName)
+                userDefaults.setObject(organizationName, forKey: Constant.KeyForCustomerOrganizationName)
+                userDefaults.setObject(gender == "male" ? "男" : "女", forKey: Constant.KeyForCustomerGender)
+                userDefaults.synchronize()
+                
+                NSNotificationCenter.defaultCenter().postNotificationName(Constant.DidGetCustomerInfoNofification, object: nil, userInfo: ["name" : name, "organizationName" : organizationName, "gender" : gender, ])
+            }
+        })
+        
+//        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
+//            return
+//        }
+//        //url和参数
+//        let url = Constant.HOST_PATH + "/OrderApp_getCustomerInfo.action"
+//        let parameters = ["phoneNumber" : phoneNumber, "validationCode" : validationCode, "keyword" : ""]
+//        
+//        Alamofire.request(.GET, url, parameters: parameters)
+//            .responseJSON { response in
+//                
+//                switch (response.result) {
+//                case .Success(let value):
+//                    print("get user info result: \(value)")
+//                    
+//                    if let status = value["status"] as? String {
+//                        if status == UNAUTHORIZED {
+//                            NSLog("\(url) 无权限")
+//                        } else if status == BAD_PARAMETER {
+//                            NSLog("\(url) 参数错误")
+//                        }
+//                        
+//                    } else if let dict = value as? NSDictionary {
+//                        
+//                        let name = dict["name"] as! String
+//                        let organizationName = dict["organizationName"] as! String
+//                        let gender = dict["gender"] as! String
+//                        
+//                        let userDefaults = NSUserDefaults.standardUserDefaults()
+//                        userDefaults.setObject(name, forKey: Constant.KeyForCustomerName)
+//                        userDefaults.setObject(organizationName, forKey: Constant.KeyForCustomerOrganizationName)
+//                        userDefaults.setObject(gender == "male" ? "男" : "女", forKey: Constant.KeyForCustomerGender)
+//                        userDefaults.synchronize()
+//                        
+//                        NSNotificationCenter.defaultCenter().postNotificationName(Constant.DidGetCustomerInfoNofification, object: nil, userInfo: ["name" : name, "organizationName" : organizationName, "gender" : gender, ])
+//                    }
+//                    
+//                case .Failure(let error):
+//                    NSLog("Error: %@", error)
+//                }
+//        }
     }
     
     //检查更新Info并解析
@@ -267,42 +272,24 @@ public class Tools {
     //上传token
     func updateDeviceToken() {
         
-//        let oldDeviceToken = Tools.sharedInstance.getOldDeviceToken()
         let newDeviceToken = Tools.sharedInstance.getNewDeviceToken()
         
         if newDeviceToken == nil {
             return
         }
-//        if oldDeviceToken != nil && newDeviceToken != nil && oldDeviceToken == newDeviceToken {
-//            return
-//        }
         
         if !(NSUserDefaults.standardUserDefaults().boolForKey("isRegisteredCustomerInfo")) {
             return
         }
         
-        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
-            return
-        }
-        
-        let parameters = ["phoneNumber" : phoneNumber, "validationCode" : validationCode, "deviceType" : "ios", "deviceToken" : newDeviceToken!]
-        let url = Constant.HOST_PATH + "/OrderApp_updateDeviceToken.action"
-        Alamofire.request(.GET, url, parameters: parameters)
-            .responseJSON { response in
-                
-                print("OrderApp_updateDeviceToken.action request:\(response.request)")
-                print("Update Device Token result: \(response.result.value)")
-                //处理结果
-                switch (response.result) {
-                case .Success(let value):
-                    if let status = value["status"] as? Bool where status {
-                        Tools.sharedInstance.setOldDeviceToken(newDeviceToken!)
-                    } else {
-                        print("Update Device Token Failed")
-                    }
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
+        URLConnector.request(Router.updateDeviceToken(deviceType: "ios", deviceToken: newDeviceToken!), successCallBack: { value in
+            if let status = value["status"].bool {
+                if status {
+                    Tools.sharedInstance.setOldDeviceToken(newDeviceToken!)
+                } else {
+                    print("Update Device Token Failed")
                 }
-        }
+            }
+        })
     }
 }

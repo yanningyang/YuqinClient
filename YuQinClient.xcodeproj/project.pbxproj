@@ -14,6 +14,10 @@
 		C926F3CB1CA41D4200EADBB9 /* OrderManagementViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C926F3CA1CA41D4200EADBB9 /* OrderManagementViewController.swift */; };
 		C92D642B1C9D8F5500789EBF /* CustomerInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92D642A1C9D8F5500789EBF /* CustomerInfo.swift */; };
 		C92D642E1C9D977F00789EBF /* CallTaxiDailyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C92D642D1C9D977F00789EBF /* CallTaxiDailyViewController.swift */; };
+		C944541C1DFD2FA600195A34 /* URLConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = C944541B1DFD2FA600195A34 /* URLConnector.swift */; };
+		C944541E1DFD346900195A34 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = C944541D1DFD346900195A34 /* Util.swift */; };
+		C94454201DFD457300195A34 /* OperatorOverride.swift in Sources */ = {isa = PBXBuildFile; fileRef = C944541F1DFD457300195A34 /* OperatorOverride.swift */; };
+		C94454231DFE732600195A34 /* Order.swift in Sources */ = {isa = PBXBuildFile; fileRef = C94454221DFE732600195A34 /* Order.swift */; };
 		C95825DE1C9EFA8A007EDAF4 /* SelectFavoriteAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95825DD1C9EFA8A007EDAF4 /* SelectFavoriteAddressViewController.swift */; };
 		C95825E01CA00A9E007EDAF4 /* CityList.plist in Resources */ = {isa = PBXBuildFile; fileRef = C95825DF1CA00A9E007EDAF4 /* CityList.plist */; };
 		C95825E21CA011DD007EDAF4 /* SelectCityViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95825E11CA011DD007EDAF4 /* SelectCityViewController.swift */; };
@@ -101,6 +105,10 @@
 		C926F3CA1CA41D4200EADBB9 /* OrderManagementViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OrderManagementViewController.swift; sourceTree = "<group>"; };
 		C92D642A1C9D8F5500789EBF /* CustomerInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomerInfo.swift; sourceTree = "<group>"; };
 		C92D642D1C9D977F00789EBF /* CallTaxiDailyViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallTaxiDailyViewController.swift; sourceTree = "<group>"; };
+		C944541B1DFD2FA600195A34 /* URLConnector.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = URLConnector.swift; sourceTree = "<group>"; };
+		C944541D1DFD346900195A34 /* Util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
+		C944541F1DFD457300195A34 /* OperatorOverride.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OperatorOverride.swift; sourceTree = "<group>"; };
+		C94454221DFE732600195A34 /* Order.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Order.swift; sourceTree = "<group>"; };
 		C95825DD1C9EFA8A007EDAF4 /* SelectFavoriteAddressViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectFavoriteAddressViewController.swift; sourceTree = "<group>"; };
 		C95825DF1CA00A9E007EDAF4 /* CityList.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = CityList.plist; sourceTree = "<group>"; };
 		C95825E11CA011DD007EDAF4 /* SelectCityViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SelectCityViewController.swift; sourceTree = "<group>"; };
@@ -219,6 +227,14 @@
 			name = Reachability;
 			sourceTree = "<group>";
 		};
+		C94454211DFE731600195A34 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				C94454221DFE732600195A34 /* Order.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
 		C97164241CBA782B00437242 /* Other */ = {
 			isa = PBXGroup;
 			children = (
@@ -235,10 +251,13 @@
 			isa = PBXGroup;
 			children = (
 				C99F0F7C1C9AA23400ECD99A /* Tools.swift */,
+				C944541D1DFD346900195A34 /* Util.swift */,
 				C99F0F7E1C9AA2D600ECD99A /* Constant.swift */,
 				C99F0FB51C9D42C800ECD99A /* UITools.swift */,
 				C95825E61CA04720007EDAF4 /* RegExHelper.swift */,
 				C97164221CBA588000437242 /* UpdateInfoXmlParser.swift */,
+				C944541B1DFD2FA600195A34 /* URLConnector.swift */,
+				C944541F1DFD457300195A34 /* OperatorOverride.swift */,
 			);
 			name = Tools;
 			sourceTree = "<group>";
@@ -288,9 +307,9 @@
 		C99F0F991C9C424000ECD99A /* View */ = {
 			isa = PBXGroup;
 			children = (
+				C99F0F8B1C9BFCDD00ECD99A /* SelectAddressTableViewCell.swift */,
 				C9B6C5231C9939950065C204 /* CollectionViewCellForCarType.swift */,
 				C99F0F891C9BF7FA00ECD99A /* CustomerInfoTableViewCell.swift */,
-				C99F0F8B1C9BFCDD00ECD99A /* SelectAddressTableViewCell.swift */,
 				C99F0F931C9C069900ECD99A /* SelectDateTableViewCell.swift */,
 				C99F0F9E1C9C483900ECD99A /* SelectCarTypeTableViewCell.swift */,
 				C99F0FA01C9C528E00ECD99A /* CarTypeCollectionViewCell.swift */,
@@ -343,6 +362,7 @@
 				C99F0FAA1C9D042500ECD99A /* Extension */,
 				C92167A01CA7A2C200B642BA /* Reachability */,
 				C9754F341CA0593800851710 /* Tools */,
+				C94454211DFE731600195A34 /* Domain */,
 				C99F0F991C9C424000ECD99A /* View */,
 				C99F0F971C9C41B300ECD99A /* xib */,
 				C99F0F981C9C422B00ECD99A /* ViewController */,
@@ -442,7 +462,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0720;
-				LastUpgradeCheck = 0720;
+				LastUpgradeCheck = 0810;
 				ORGANIZATIONNAME = YuQin;
 				TargetAttributes = {
 					C9BD40EB1C954867007390D3 = {
@@ -577,6 +597,7 @@
 			files = (
 				C92D642B1C9D8F5500789EBF /* CustomerInfo.swift in Sources */,
 				C99F7AB31CB7976E002E6BEE /* RatingViewController.swift in Sources */,
+				C94454201DFD457300195A34 /* OperatorOverride.swift in Sources */,
 				C9F186901C9821D800E19643 /* LoginViewController.swift in Sources */,
 				C99F0FB81C9D469700ECD99A /* CallTaxiForOtherViewController.swift in Sources */,
 				C918D0671CA297C000558576 /* RegisterCustomerInfoViewController.swift in Sources */,
@@ -592,6 +613,7 @@
 				C99F0F8C1C9BFCDD00ECD99A /* SelectAddressTableViewCell.swift in Sources */,
 				C99F0F9F1C9C483900ECD99A /* SelectCarTypeTableViewCell.swift in Sources */,
 				C99F0FAE1C9D07D100ECD99A /* FileOwner.swift in Sources */,
+				C94454231DFE732600195A34 /* Order.swift in Sources */,
 				C99F0F8A1C9BF7FA00ECD99A /* CustomerInfoTableViewCell.swift in Sources */,
 				C95825DE1C9EFA8A007EDAF4 /* SelectFavoriteAddressViewController.swift in Sources */,
 				C99F0FA11C9C528E00ECD99A /* CarTypeCollectionViewCell.swift in Sources */,
@@ -601,6 +623,7 @@
 				C99F0F7F1C9AA2D600ECD99A /* Constant.swift in Sources */,
 				C9E81ADC1C9DA2A3004753F4 /* AboutMeTableViewController.swift in Sources */,
 				C99F7AB11CB778BC002E6BEE /* RatingBar.swift in Sources */,
+				C944541C1DFD2FA600195A34 /* URLConnector.swift in Sources */,
 				C99F0FAC1C9D058300ECD99A /* UIView+LoadFromNib.swift in Sources */,
 				C9C001151CA54A6700927186 /* OrderManagementMenuTableViewCell.swift in Sources */,
 				C99F0F7B1C9A827D00ECD99A /* SelectAddressViewController.swift in Sources */,
@@ -611,6 +634,7 @@
 				C9B6C5241C9939950065C204 /* CollectionViewCellForCarType.swift in Sources */,
 				C95825E21CA011DD007EDAF4 /* SelectCityViewController.swift in Sources */,
 				C91787B51CA59E2A004663D8 /* OrderDetailViewController.swift in Sources */,
+				C944541E1DFD346900195A34 /* Util.swift in Sources */,
 				C9A280B51CA1739500F94129 /* String+MD5.swift in Sources */,
 				C99F0FB41C9D395500ECD99A /* CallTaxiNowViewController.swift in Sources */,
 				C926F3CB1CA41D4200EADBB9 /* OrderManagementViewController.swift in Sources */,
@@ -686,8 +710,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -732,8 +758,10 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
@@ -753,6 +781,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 2.3;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -762,12 +791,14 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E805704CF8109F6A778A27FB /* Pods-YuQinClient.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = YuQinClient/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" -D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yuqin.YuQinClient;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "YuQinClient/YuQinClient-Bridging-Header.h";
@@ -780,12 +811,14 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 247922997AB991265B8445F8 /* Pods-YuQinClient.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = YuQinClient/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" -D DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yuqin.YuQinClient;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "YuQinClient/YuQinClient-Bridging-Header.h";

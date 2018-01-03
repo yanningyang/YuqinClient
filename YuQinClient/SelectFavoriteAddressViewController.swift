@@ -13,7 +13,7 @@ class SelectFavoriteAddressViewController: UIViewController, UITableViewDataSour
     
     var identifier: String!
     
-    var favAddressList = [AddressInfo]()
+    var favAddressList: [AddressInfo] = { [AddressInfo]() }()
     
     @IBOutlet weak var tableView: UITableView!
     
@@ -41,7 +41,7 @@ class SelectFavoriteAddressViewController: UIViewController, UITableViewDataSour
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("CellForFavAddressList", forIndexPath: indexPath) 
-        cell.textLabel?.text = favAddressList[indexPath.row].description
+        cell.textLabel?.text = favAddressList[indexPath.row].name
         cell.detailTextLabel?.text = favAddressList[indexPath.row].detail
         
         return cell
@@ -60,49 +60,19 @@ class SelectFavoriteAddressViewController: UIViewController, UITableViewDataSour
     
     func getAllFavAddress() {
         
-        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
-            return
-        }
-        
-        //url和参数
-        let url = Constant.HOST_PATH + "/OrderApp_getAllFavoriateAddress.action"
-        let parameters = ["phoneNumber" : phoneNumber, "validationCode" : validationCode]
-        
-        Alamofire.request(.GET, url, parameters: parameters)
-            .responseJSON { response in
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("get all fav address result: \(value)")
-                    
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
-                        
-                    } else if let list = value as? [Dictionary<String, AnyObject>] {
-                        
-                        for item in list {
-                            let addressInfo = AddressInfo()
-                            addressInfo.description = item["description"] as? String
-                            addressInfo.detail = item["detail"] as? String
-                            addressInfo.latitude = item["latitude"] as? Double
-                            addressInfo.longitude = item["longitude"] as? Double
-                            self.favAddressList.append(addressInfo)
-                        }
-                        
-                        self.favAddressList.count == 0 ? UITools.sharedInstance.showNoDataTipToView(self.view, tipStr: "暂无常用地址") : UITools.sharedInstance.hideNoDataTipFromView(self.view)
-                        
-                        self.tableView.reloadData()
-                    }
-                    
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
+        URLConnector.request(Router.getAllFavoriateAddress, successCallBack: { value in
+            if let list = value.array {
+                for item in list {
+                    let addressInfo = AddressInfo()
+                    addressInfo.name = item.string
+                    self.favAddressList.append(addressInfo)
                 }
-        }
+                
+                self.favAddressList.count == 0 ? UITools.sharedInstance.showNoDataTipToView(self.view, tipStr: "暂无常用地址") : UITools.sharedInstance.hideNoDataTipFromView(self.view)
+                
+                self.tableView.reloadData()
+            }
+        })
     }
 
 }

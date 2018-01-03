@@ -113,41 +113,25 @@ class PersonalInfoViewController: UIViewController {
     
     func getSMSCode() {
         
-        if let (phoneNumber1, _) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1 where !phoneNumber.isEmpty {
-            
-            //等待动画
-            let HUD = UITools.sharedInstance.showLoadingAnimation()
-            //url和参数
-            let url = Constant.HOST_PATH + "/user_getSMSCode.action"
-            let parameters = ["phoneNumber" : phoneNumber]
-            
-            Alamofire.request(.GET, url, parameters: parameters)
-                .responseJSON { response in
-                    print("get SMScode result: \(response.request)")
-                    //取消等待动画
-                    HUD.hide(true)
-                    
-                    switch (response.result) {
-                    case .Success(let value):
-                        print("get validation code result: \(value)")
-                        if value["status"] as! Int == 1 {
-                            
-                            self.getValidationCodeBtn.enabled = false
-                            self.timer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(self.counter), userInfo: nil, repeats: true)
-                            
-                            let userDefaults = NSUserDefaults.standardUserDefaults()
-                            userDefaults.setBool(false, forKey: "isLogin")
-                            userDefaults.synchronize()
-                            
-                        } else {
-                            
-                            UITools.sharedInstance.toast("获取验证码失败，请重新获取")
-                        }
-                    case .Failure(let error):
-                        NSLog("Error: %@", error)
-                    }
-            }
+        let userInfo = Util.sharedInstance.getUserInfo()
+        guard let phoneNumber = userInfo.0, validationCode = userInfo.1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
+            print("从本地获取登录信息失败!")
+            return
         }
+        URLConnector.request(Router.getSMSCode(phoneNumber: phoneNumber), showLoadingAnimation: true, successCallBack: { value in
+            if let status = value["status"].bool {
+                if status {
+                    self.getValidationCodeBtn.enabled = false
+                    self.timer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(self.counter), userInfo: nil, repeats: true)
+                    
+                    let userDefaults = NSUserDefaults.standardUserDefaults()
+                    userDefaults.setBool(false, forKey: "isLogin")
+                    userDefaults.synchronize()
+                } else {
+                    UITools.sharedInstance.toast("获取验证码失败，请重新获取")
+                }
+            }
+        })
     }
     
     //倒计时
@@ -189,54 +173,24 @@ class PersonalInfoViewController: UIViewController {
             return
         }
         
-        guard let (phoneNumber1, _) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1 where !phoneNumber.isEmpty else {
-            return
-        }
-        
-        //等待动画
-        let HUD = UITools.sharedInstance.showLoadingAnimation()
-        //url和参数
-        let url = Constant.HOST_PATH + "/OrderApp_updateCustomerInfo.action"
-        let parameters = ["phoneNumber" : phoneNumber,
-                          "validationCode" : validationCode!.md5,
+        let parameters: [String : String] = ["validationCode" : validationCode!.md5,
                           "newCustomerName" : newCustomerName!,
                           "newCustomerOrganizationName" : newCustomerOrganizationName!,
                           "newGender" : newGender]
-        Alamofire.request(.GET, url, parameters: parameters)
-            .responseJSON { response in
-                print("uodate customer info request: \(response.request)")
-                //取消等待动画
-                HUD.hide(true)
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("update customer info result: \(value)")
+        URLConnector.request(Router.updateCustomerInfo(params: parameters), successCallBack: { value in
+            if let status = value["status"].bool {
+                if status {
                     
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
-                        
-                    } else if let status = value["status"] as? Bool {
-                        
-                        if status {
-                            
-                            let userDefaults = NSUserDefaults.standardUserDefaults()
-                            userDefaults.setObject(validationCode!.md5, forKey: Constant.KeyForValidationCode)
-                            userDefaults.synchronize()
-                            
-                            Tools.sharedInstance.getCustomerInfoFromNet()
-                            self.navigationController?.popViewControllerAnimated(true)
-                        } else {
-                            UITools.sharedInstance.toast("更新用户信息失败，请重试")
-                        }
-                    }
+                    let userDefaults = NSUserDefaults.standardUserDefaults()
+                    userDefaults.setObject(validationCode!.md5, forKey: Constant.KeyForValidationCode)
+                    userDefaults.synchronize()
                     
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
+                    Tools.sharedInstance.getCustomerInfoFromNet()
+                    self.navigationController?.popViewControllerAnimated(true)
+                } else {
+                    UITools.sharedInstance.toast("更新用户信息失败，请重试")
                 }
-        }
+            }
+        })
     }
 }

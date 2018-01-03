@@ -46,53 +46,26 @@ class HomeViewController: UITabBarController {
     
     func checkCustomerInfo() {
         
-        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
-            return
-        }
-        
-        //url和参数
-        let url = Constant.HOST_PATH + "/OrderApp_needRegistUserInfo.action"
-        let parameters = ["phoneNumber" : phoneNumber, "validationCode" : validationCode]
-        
-        Alamofire.request(.GET, url, parameters: parameters)
-            .responseJSON { response in
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("check user info result: \(value)")
+        URLConnector.request(Router.needRegistUserInfo, successCallBack: { value in
+            if let status = value["status"].bool {
+                if status {
+                    let presentedVC = self.storyboard?.instantiateViewControllerWithIdentifier("RegisterCustomerInfoViewController") as! RegisterCustomerInfoViewController
                     
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
-                        
-                    } else if let status = value["status"] as? Bool {
-                        if !status {
-                            NSLog("个人信息已完善")
-                            Tools.sharedInstance.updateDeviceToken()
-                        } else {
-                            
-                            let presentedVC = self.storyboard?.instantiateViewControllerWithIdentifier("RegisterCustomerInfoViewController") as! RegisterCustomerInfoViewController
-                            
-                            presentedVC.title = "请填写个人信息"
-                            let width = UIApplication.sharedApplication().keyWindow?.frame.size.width
-                            presentedVC.contentSizeInPopup = CGSizeMake(width!, 300)
-                            presentedVC.landscapeContentSizeInPopup = CGSizeMake(400, 200)
-                            presentedVC.navigationItem.hidesBackButton = true
-                            
-                            self.popupVC = STPopupController(rootViewController: presentedVC)
-                            self.popupVC.style = .FormSheet
-                            self.popupVC.presentInViewController(self)
-                        }
-                    }
+                    presentedVC.title = "请填写个人信息"
+                    let width = UIApplication.sharedApplication().keyWindow?.frame.size.width
+                    presentedVC.contentSizeInPopup = CGSizeMake(width!, 300)
+                    presentedVC.landscapeContentSizeInPopup = CGSizeMake(400, 200)
+                    presentedVC.navigationItem.hidesBackButton = true
                     
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
+                    self.popupVC = STPopupController(rootViewController: presentedVC)
+                    self.popupVC.style = .FormSheet
+                    self.popupVC.presentInViewController(self)
+                } else {
+                    print("个人信息已完善")
+                    Tools.sharedInstance.updateDeviceToken()
                 }
-        }
+            }
+        })
     }
     
     func reachabilityChanged(notification: NSNotification) {

@@ -8,6 +8,7 @@
 
 import UIKit
 import Alamofire
+import SwiftyJSON
 
 class RegisterCustomerInfoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
@@ -16,7 +17,7 @@ class RegisterCustomerInfoViewController: UIViewController, UITableViewDataSourc
     
     @IBOutlet weak var tableView: UITableView!
     
-    var organizationList = [String]()
+    var organizationList: [JSON] = { [JSON]() }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,7 +41,7 @@ class RegisterCustomerInfoViewController: UIViewController, UITableViewDataSourc
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("CellForSelectOrganization", forIndexPath: indexPath)
-        cell.textLabel?.text = organizationList[indexPath.row]
+        cell.textLabel?.text = organizationList[indexPath.row].string
         
         return cell
     }
@@ -48,7 +49,7 @@ class RegisterCustomerInfoViewController: UIViewController, UITableViewDataSourc
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         NSLog("didSelectRowAtIndexPath %d", indexPath.row)
         
-        customerOrganizationTextField.text = organizationList[indexPath.row]
+        customerOrganizationTextField.text = organizationList[indexPath.row].string
         tableView.hidden = true
     }
     
@@ -70,37 +71,17 @@ class RegisterCustomerInfoViewController: UIViewController, UITableViewDataSourc
     
     func searchCustomerOrganization() {
         
-        if let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty {
-            
-            var keyword = ""
-            if customerOrganizationTextField.text != nil {
-                keyword = customerOrganizationTextField.text!
-            }
-            
-            //url和参数
-            let url = Constant.HOST_PATH + "/OrderApp_searchCustomerOrganization.action"
-            let parameters = ["phoneNumber" : phoneNumber, "validationCode" : validationCode, "keyword" : keyword]
-            
-            Alamofire.request(.GET, url, parameters: parameters)
-                .responseJSON { response in
-                    
-                    switch (response.result) {
-                    case .Success(let value):
-                        print("get organization name result: \(value)")
-                        
-                        if let data = value as? [String] {
-                            self.organizationList = data
-                            self.tableView.reloadData()
-                            self.tableView.hidden = false
-                        }
-                        
-                    case .Failure(let error):
-                        NSLog("Error: %@", error)
-                    }
-            }
-        } else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
+        var keyword = ""
+        if customerOrganizationTextField.text != nil {
+            keyword = customerOrganizationTextField.text!
         }
+        URLConnector.request(Router.searchCustomerOrganization(keyword: keyword), successCallBack: { value in
+            if let list = value.array {
+                self.organizationList = list
+                self.tableView.reloadData()
+                self.tableView.hidden = false
+            }
+        })
     }
     
     func submitCustomerInfo() {
@@ -120,51 +101,21 @@ class RegisterCustomerInfoViewController: UIViewController, UITableViewDataSourc
             return
         }
         
-        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
-            return
-        }
-        //等待动画
-        let HUD = UITools.sharedInstance.showLoadingAnimation()
-        //url和参数
-        let url = Constant.HOST_PATH + "/OrderApp_registCustomerInfo.action"
-        let parameters = ["phoneNumber" : phoneNumber, "validationCode" : validationCode, "customerName" : customerName!, "customerOrganizationName" : customerOrganization!]
-        
-        Alamofire.request(Method.GET, url, parameters: parameters)
-            .responseJSON { response in
-                
-                //取消等待动画
-                HUD.hide(true)
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("regist customer info result: \(value)")
+        URLConnector.request(Router.registCustomerInfo(customerName: customerName!, customerOrganizationName: customerOrganization!), successCallBack: { value in
+            if let status = value["status"].bool {
+                if status {
+                    print("登记成功")
+                    let userDefaults = NSUserDefaults.standardUserDefaults()
+                    userDefaults.setBool(true, forKey: "isRegisteredCustomerInfo")
+                    //上传token
+                    Tools.sharedInstance.updateDeviceToken()
+                    self.dismissViewControllerAnimated(true, completion: nil)
                     
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
-                        
-                    } else if let status = value["status"] as? Bool {
-                        
-                        if status {
-                            NSLog("登记成功")
-                            let userDefaults = NSUserDefaults.standardUserDefaults()
-                            userDefaults.setBool(true, forKey: "isRegisteredCustomerInfo")
-                            //上传token
-                            Tools.sharedInstance.updateDeviceToken()
-                            self.dismissViewControllerAnimated(true, completion: nil)
-                            
-                        } else {
-                            NSLog("登记失败")
-                        }
-                    }
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
+                } else {
+                    print("登记失败")
                 }
-        }
+            }
+        })
     }
 
 }

@@ -53,7 +53,7 @@ class UpdateInfoXmlParser: NSObject, NSXMLParserDelegate {
         if let tag = self.currentTagName {
             
             switch tag {
-            case "version":
+            case "ios-version":
                 updateInfo?.version = string
             case "appID":
                 updateInfo?.appId = string

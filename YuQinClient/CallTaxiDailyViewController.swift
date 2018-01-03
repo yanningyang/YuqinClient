@@ -11,6 +11,7 @@ import ActionSheetPicker_3_0
 import STPopup
 import Alamofire
 import MBProgressHUD
+import SwiftyJSON
 
 class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     
@@ -27,14 +28,15 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
     var beginDateLabel: UILabel!
     var endDateLabel: UILabel!
     var startAddressCityLabel: UILabel!
-    var startAddressLabel: UILabel!
+    var startAddressText: UITextField!
     var tableFooterView: ChargeAndCarInfoUIView!
     
     
-    var dateFormatter = NSDateFormatter()
+    var dateFormatter = { NSDateFormatter() }()
     
-    var carTypeList = [Dictionary<String, AnyObject>]()
-    var selectedCustomerInfo = CustomerInfo()
+    var carTypeList: [JSON] = { [JSON]() }()
+    var carTypeImgDict: [Int : UIImage] = { [Int : UIImage]() }()
+    var selectedCustomerInfo = { CustomerInfo() }()
     var fromAddress: AddressInfo?
     var beginDate: NSDate?
     var endDate: NSDate?
@@ -44,6 +46,19 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        initUI()
+        
+        setCustomerInfo()
+        
+        getAllCarServiceType()
+    }
+
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+    }
+    
+    func initUI() {
         
         //去掉顶部空白
         self.automaticallyAdjustsScrollViewInsets = false
@@ -52,7 +67,7 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
         
         bottomView.setContentViewFrame(self.bottomView.frame)
         bottomView.submitBtn.addTarget(self, action: #selector(submitOrder(_:)), forControlEvents: UIControlEvents.TouchUpInside)
-
+        
         //为表视图注册类
         tableView.registerClass(CustomerInfoTableViewCell.self, forCellReuseIdentifier: cellIdentifierForCustomerInfo)
         tableView.registerClass(SelectAddressTableViewCell.self, forCellReuseIdentifier: cellIdentifierForSelectAddress)
@@ -77,8 +92,8 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
         tableFooterView.label3.text = ""
         
         //设置tableView背景色
-//        tableView.backgroundView = nil
-//        tableView.backgroundColor = UIColor.clearColor()
+        //        tableView.backgroundView = nil
+        //        tableView.backgroundColor = UIColor.clearColor()
         
         //注册通知
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(didSelectCustomer(_:)), name: Constant.CallTaxiDailyViewControllerDidSelectCustomerNofification, object: nil)
@@ -92,13 +107,13 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
         let bottomViewTapGesture = UITapGestureRecognizer(target: self, action: #selector(onClickBottomView(_:)))
         bottomView.addGestureRecognizer(bottomViewTapGesture)
         
-        setCustomerInfo()
-        
-        getAllCarServiceType()
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
+        // 点击TableView关闭键盘
+        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(onTapBackgroundView(_:)))
+        tapRecognizer.numberOfTapsRequired = 1
+        tapRecognizer.cancelsTouchesInView = false
+        self.tableView.addGestureRecognizer(tapRecognizer)
+        // 滑动TableView关闭键盘
+        self.tableView.keyboardDismissMode = .OnDrag
     }
     
     // MARK - tableview delegate
@@ -151,12 +166,17 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
             cell1.button.tag = 0
             cell1.button.addTarget(self, action: #selector(popupSelectFavoriteAddressController(_:)), forControlEvents: .TouchUpInside)
             startAddressCityLabel = cell1.label1
-            startAddressLabel = cell1.label2
-            startAddressLabel.text = fromAddress != nil ? fromAddress?.name : "请选择上车地点"
+            startAddressText = cell1.textField
+            if fromAddress != nil {
+                startAddressText.text = fromAddress!.name
+            } else {
+                startAddressText.placeholder = "请填写上车地点"
+            }
         case 3:
             cell = tableView.dequeueReusableCellWithIdentifier(cellIdentifierForSelectCarType, forIndexPath: indexPath)
             let cell1 = cell as! SelectCarTypeTableViewCell
             collectionView = cell1.collectionView
+            collectionView.keyboardDismissMode = .OnDrag
             cell1.collectionView.dataSource = self
             cell1.collectionView.delegate = self
             cell1.collectionView.reloadData()
@@ -207,9 +227,10 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
                 selectDateForLabel(endDateLabel)
             }
         case 2:
-            let page2 = storyboard?.instantiateViewControllerWithIdentifier("SelectAddressViewController") as! SelectAddressViewController
-            page2.identifier = Constant.CallTaxiDailyViewControllerDidSelectStartAddressNofification
-            self.navigationController?.pushViewController(page2, animated: true)
+//            let page2 = storyboard?.instantiateViewControllerWithIdentifier("SelectAddressViewController") as! SelectAddressViewController
+//            page2.identifier = Constant.CallTaxiDailyViewControllerDidSelectStartAddressNofification
+//            self.navigationController?.pushViewController(page2, animated: true)
+            break
         case 3:
             break
         default:
@@ -235,8 +256,8 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
         
         let row = indexPath.row
         let dict = carTypeList[row]
-        cell.label.text = dict["name"] as? String
-        cell.imageView1.image = dict["image"] as? UIImage
+        cell.label.text = dict["name"].string
+//        cell.imageView1.image = carTypeImgDict[dict["id"].int!]
         
         if selectedCarType == indexPath.row {
             
@@ -257,7 +278,7 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
         NSLog("click item %d", indexPath.row)
         
         selectedCarType = indexPath.row
-        tableFooterView.label1.text = self.carTypeList[selectedCarType]["priceDescription"] as? String
+        tableFooterView.label1.text = self.carTypeList[selectedCarType]["priceDescription"].string
         collectionView.reloadData()
         
         if fromAddress != nil && beginDate != nil && endDate != nil {
@@ -328,9 +349,9 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
     func didSelectStartAddress(notification: NSNotification) {
         fromAddress = notification.object as? AddressInfo
 //        startAddressCityLabel.text = fromAddress!.city.substringToIndex((fromAddress!.city.endIndex.advancedBy(-1)))
-        startAddressLabel.text = fromAddress!.name
+        startAddressText.text = fromAddress!.name
 //        startAddressCityLabel.textColor = UITools.sharedInstance.getDefaultTextColor()
-        startAddressLabel.textColor = UITools.sharedInstance.getDefaultTextColor()
+        startAddressText.textColor = UITools.sharedInstance.getDefaultTextColor()
         
 //        if beginDate != nil && endDate != nil {
 //            estimatePrice()
@@ -340,9 +361,9 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
     func didSelectFavStartAddress(notification: NSNotification) {
         fromAddress = notification.object as? AddressInfo
         //        startAddressCityLabel.text = fromAddress!.city.substringToIndex((fromAddress!.city.endIndex.advancedBy(-1)))
-        startAddressLabel.text = fromAddress!.name
+        startAddressText.text = fromAddress!.name
         startAddressCityLabel.textColor = UITools.sharedInstance.getDefaultTextColor()
-        startAddressLabel.textColor = UITools.sharedInstance.getDefaultTextColor()
+        startAddressText.textColor = UITools.sharedInstance.getDefaultTextColor()
         
 //        if beginDate != nil && endDate != nil {
 //            estimatePrice()
@@ -382,7 +403,7 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
         popupVC = STPopupController(rootViewController: vc)
         popupVC.style = .BottomSheet
         popupVC.presentInViewController(self)
-        popupVC.backgroundView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapPopupControllerBackground(_:))))
+        popupVC.backgroundView!.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapPopupControllerBackground(_:))))
     }
     
     func onTapPopupControllerBackground(sender: UITapGestureRecognizer) {
@@ -392,124 +413,44 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
     
     func getAllCarServiceType() {
         
-        if let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty {
+        URLConnector.request(Router.getAllCarServiceType, successCallBack: { value in
             
-            //url和参数
-            let url = Constant.HOST_PATH + "/OrderApp_getAllCarServiceType.action"
-            let parameters = ["phoneNumber" : phoneNumber, "validationCode" : validationCode]
-            
-            Alamofire.request(.GET, url, parameters: parameters)
-                .responseJSON { response in
-                    
-                    switch (response.result) {
-                    case .Success(let value):
-                        print("get all car service type result: \(value)")
-                        
-                        if let list = value as? [Dictionary<String, AnyObject>] {
-                            self.carTypeList = list
-                            self.collectionView.reloadData()
-                            self.tableFooterView.label1.text = self.carTypeList[self.selectedCarType]["priceDescription"] as? String
-                        }
-                        for item in self.carTypeList {
-                            self.getCarImg(item["id"] as! Int)
-                        }
-                        
-                    case .Failure(let error):
-                        NSLog("Error: %@", error)
-                    }
+            if let list = value.array {
+                self.carTypeList = list
+                self.collectionView.reloadData()
+                self.tableFooterView.label1.text = self.carTypeList[self.selectedCarType]["priceDescription"].string
             }
-        } else {
-//            Tools.sharedInstance.logout(withToast: true)
-        }
+//            for item in self.carTypeList {
+//                self.getCarImg(item["id"].int!)
+//            }
+        })
     }
     
     func getCarImg(type: Int) {
         
-        if let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty {
-            
-            //url和参数
-            let url = Constant.HOST_PATH + "/OrderApp_getCarServiceTypeImage.action"
-            let parameters = ["phoneNumber" : phoneNumber, "validationCode" : validationCode, "carServiceTypeId" : type]
-            
-            Alamofire.request(.GET, url, parameters: parameters as? [String : AnyObject])
-                .responseData { response in
-                    
-                    switch (response.result) {
-                    case .Success(let value):
-                        
-                        for i in 0..<self.carTypeList.count {
-                            if self.carTypeList[i]["id"] as! Int == type {
-                                self.carTypeList[i]["image"] = UIImage(data: value)
-                                break
-                            }
-                        }
-                        self.collectionView.reloadData()
-                        
-                    case .Failure(let error):
-                        NSLog("Error: %@", error)
-                    }
-            }
-        } else {
-//            Tools.sharedInstance.logout(withToast: true)
+        // 先查看内存中是否存在
+        if self.carTypeImgDict[type] != nil { return }
+        
+        // 再看磁盘中是否存在
+        let documentsURL = NSFileManager.defaultManager().URLsForDirectory(.DocumentDirectory, inDomains: .UserDomainMask)[0]
+        let localFileName = "carType_\(type).jpg"
+        guard let fileURL = documentsURL.URLByAppendingPathComponent(localFileName), filePath = fileURL.path else {
+            return
         }
+        let fileExists = NSFileManager.defaultManager().fileExistsAtPath(filePath)
+        if fileExists {
+            self.carTypeImgDict[type] = UIImage(contentsOfFile: filePath)
+            return
+        }
+        
+        // 最后访问网络
+        URLConnector.download(Router.getCarServiceTypeImage(carServiceTypeId: "\(type)"), localFileName: localFileName, downloadComplete: { success, destinationURL in
+            self.carTypeImgDict[type] = UIImage(contentsOfFile: filePath)
+        })
     }
     
     func estimatePrice() {
         
-        if beginDate == nil || endDate == nil {
-            return
-        }
-        
-        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
-            return
-        }
-        
-        //url和参数
-        let beginTime = Int64(beginDate!.timeIntervalSince1970 * 1000)
-        let endTime = Int64(endDate!.timeIntervalSince1970 * 1000)
-        let url = Constant.HOST_PATH + "/OrderApp_calculatePrice.action"
-        let parameters = ["phoneNumber"                     : phoneNumber,
-                          "validationCode"                  : validationCode,
-                          "carServiceTypeId"                : selectedCarType + 1,
-                          "dayOrder"                        : "true",
-                          "beginTime"                       : "\(beginTime)",
-                          "endTime"                         : "\(endTime)",
-                          "beginAddress"                    : "",
-                          "beginAddressDetail"              : "",
-                          "beginAddressLocationLongitude"   : "",
-                          "beginAddressLocationLatitude"    : "",
-                          "endAddress"                      : "",
-                          "endAddressDetail"                : "",
-                          "endAddressLocationLongitude"     : "",
-                          "endAddressLocationLatitude"      : ""]
-        
-        Alamofire.request(.GET, url, parameters: parameters as? [String : AnyObject])
-            .responseJSON { response in
-                print("estimate price request: \(response.request)")
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("estimate price result: \(value)")
-                    
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
-                        
-                    } else if let dict = value as? Dictionary<String, AnyObject> {
-                        
-                        if let price = dict["price"] as? Int, quantity = dict["quantity"] as? Int {
-                            self.bottomView.estimatedCostLabel.text = "¥\(price)（\(quantity)天）"
-                        }
-                    }
-                    break
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
-                }
-        }
     }
     
     func submitOrder() {
@@ -522,8 +463,8 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
             UITools.sharedInstance.shakeView(endDateLabel)
             return
         }
-        if fromAddress == nil{
-            UITools.sharedInstance.shakeView(startAddressLabel)
+        guard let fromAddressStr = startAddressText.text where !fromAddressStr.isEmpty else {
+            UITools.sharedInstance.shakeView(startAddressText)
             return
         }
         if beginDate!.compare(NSDate()) == .OrderedAscending {
@@ -531,70 +472,35 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
             return
         }
         
-        if let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty {
-            
-            //是否为他人叫车
-            let callForOther = phoneNumber != selectedCustomerInfo.phone ? "true" : "false"
-            
-            //等待动画
-            let HUD = UITools.sharedInstance.showLoadingAnimation()
-            //url和参数
-            let beginTime = Int64(NSDate().timeIntervalSince1970 * 1000)
-            let endTime = Int64(endDate!.timeIntervalSince1970 * 1000)
-            let url = Constant.HOST_PATH + "/OrderApp_submitOrder.action"
-            let parameters = ["phoneNumber"                    : phoneNumber,
-                              "validationCode"                  : validationCode,
-                              "carServiceTypeId"                : selectedCarType + 1,
-                              "dayOrder"                        : "true",
-                              "beginTime"                       : "\(beginTime)",
-                              "endTime"                         : "\(endTime)",
-                              "beginAddress"                    : fromAddress!.name,
-                              "beginAddressDetail"              : fromAddress!.address,
-                              "beginAddressLocationLongitude"   : fromAddress!.pt.longitude,
-                              "beginAddressLocationLatitude"    : fromAddress!.pt.latitude,
-                              "endAddress"                      : "",
-                              "endAddressDetail"                : "",
-                              "endAddressLocationLongitude"     : "",
-                              "endAddressLocationLatitude"      : "",
-                              "callForOther"                    : callForOther,
-                              "callForOtherName"                : selectedCustomerInfo.name,
-                              "callForOtherPhoneNumber"         : selectedCustomerInfo.phone,
-                              "callForOtherSendSMS"             : selectedCustomerInfo.sendSMS ? "true" : "false"]
-            
-            Alamofire.request(.GET, url, parameters: parameters as? [String : AnyObject])
-                .responseJSON { response in
-                    print("submit order request: \(response.request)")
-                    //取消等待动画
-                    HUD.hide(true)
-                    
-                    switch (response.result) {
-                    case .Success(let value):
-                        print("submit order result: \(value)")
-                        
-                        if let status = value["status"] as? String {
-                            if status == UNAUTHORIZED {
-                                NSLog("\(url) 无权限")
-                            } else if status == BAD_PARAMETER {
-                                NSLog("\(url) 参数错误")
-                            }
-                            
-                        } else if let status = value["status"] as? Bool {
-                            
-                            if status {
-                                UITools.sharedInstance.showAlertForSubmitOrderSuccess()
-                                self.resetData()
-                            } else {
-                                UITools.sharedInstance.toast("订单提交失败，请重试")
-                            }
-                        }
-                        break
-                    case .Failure(let error):
-                        NSLog("Error: %@", error)
-                    }
-            }
-        } else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
+        let userInfo = Util.sharedInstance.getUserInfo()
+        guard let phoneNumber = userInfo.0, validationCode = userInfo.1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
+            print("从本地获取登录信息失败!")
+            return
         }
+        //是否为他人叫车
+        let callForOther = phoneNumber != selectedCustomerInfo.phone ? "true" : "false"
+        let beginTime = Int64(beginDate!.timeIntervalSince1970 * 1000)
+        let endTime = Int64(endDate!.timeIntervalSince1970 * 1000)
+        let parameters = ["carServiceTypeId"                : "\(selectedCarType+1)",
+                          "chargeMode"                      : "\(OrderType.day)",
+                          "beginTime"                       : "\(beginTime)",
+                          "endTime"                         : "\(endTime)",
+                          "beginAddress"                    : fromAddressStr,
+                          "endAddress"                      : "",
+                          "callForOther"                    : callForOther,
+                          "callForOtherName"                : selectedCustomerInfo.name,
+                          "callForOtherPhoneNumber"         : selectedCustomerInfo.phone,
+                          "callForOtherSendSMS"             : selectedCustomerInfo.sendSMS ? "true" : "false"]
+        URLConnector.request(Router.submitOrder(params: parameters), successCallBack: { value in
+            if let status = value["status"].bool {
+                if status {
+                    UITools.sharedInstance.showAlertForSubmitOrderSuccess()
+                    self.resetData()
+                } else {
+                    UITools.sharedInstance.toast("订单提交失败，请重试")
+                }
+            }
+        })
     }
     
     func reachabilityChanged(notification: NSNotification) {
@@ -639,5 +545,9 @@ class CallTaxiDailyViewController: UIViewController, UITableViewDataSource, UITa
         
         self.bottomView.estimatedCostLabel.text = ""
     }
-
+    
+    //MARK: - Gesture handle
+    func onTapBackgroundView(sender: UITapGestureRecognizer) {
+        self.view.endEditing(true)
+    }
 }

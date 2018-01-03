@@ -9,6 +9,7 @@
 import Foundation
 
 public class AddressInfo {
+    public var name: String?
     public var description: String?
     public var detail: String?
     public var latitude: Double?

@@ -8,6 +8,7 @@
 
 import UIKit
 import Alamofire
+import SwiftyJSON
 
 class LoginViewController: UIViewController {
 
@@ -56,33 +57,16 @@ class LoginViewController: UIViewController {
             return
         }
         
-        //等待动画
-        let HUD = UITools.sharedInstance.showLoadingAnimation()
-        //url和参数
-        let url = Constant.HOST_PATH + "/user_getSMSCode.action"
-        let parameters = ["phoneNumber" : phoneNumber!]
-        
-        Alamofire.request(.GET, url, parameters: parameters)
-            .responseJSON { response in
-                print("get SMScode result: \(response.request)")
-                
-                //取消等待动画
-                HUD.hide(true)
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("get validation code result: \(value)")
-                    if let status = value["status"] as? Bool where status {
-                        
-                        self.getSMSCodeBtn.enabled = false
-                        self.timer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(self.counter), userInfo: nil, repeats: true)
-                    } else {
-
-                    }
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
+        URLConnector.request(Router.getSMSCode(phoneNumber: phoneNumber!), showLoadingAnimation: true, successCallBack: { value in
+            if let status = value["status"].bool {
+                if status {
+                    self.getSMSCodeBtn.enabled = false
+                    self.timer = NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: #selector(self.counter), userInfo: nil, repeats: true)
+                } else {
+                    UITools.sharedInstance.toast("获取验证码失败，请重试。。。")
                 }
-        }
+            }
+        })
     }
     
     //倒计时
@@ -121,54 +105,28 @@ class LoginViewController: UIViewController {
             return
         }
         
-        //等待动画
-        let HUD = UITools.sharedInstance.showLoadingAnimation()
-        //url和参数
-        let url = Constant.HOST_PATH + "/OrderApp_login.action"
-        let parameters = ["phoneNumber" : phoneNumber!, "validationCode" : validationCode!.md5]
-        
-        Alamofire.request(Method.GET, url, parameters: parameters)
-            .responseJSON { response in
-                
-                //取消等待动画
-                HUD.hide(true)
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("login result: \(value)")
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
+        URLConnector.request(Router.login(phoneNumber: phoneNumber!, validationCode: validationCode!.md5!), showLoadingAnimation: true, successCallBack: { value in
+                if let status = value["status"].bool {
+                    if status {
                         
-                    } else if let status = value["status"] as? Bool {
-                        if status {
-                            
-                            NSLog("登录成功")
-                            let userDefaults = NSUserDefaults.standardUserDefaults()
-                            userDefaults.setObject(phoneNumber, forKey: "phoneNumber")
-                            userDefaults.setObject(validationCode!.md5, forKey: "validationCode")
-                            userDefaults.setBool(true, forKey: "isLogin")
-                            userDefaults.synchronize()
-                            
-                            let homeVC = self.storyboard?.instantiateViewControllerWithIdentifier("HomeViewController") as! HomeViewController
-                            let window = UIApplication.sharedApplication().keyWindow
-                            window?.rootViewController = homeVC
-                            
-                            //上传token
-//                            Tools.sharedInstance.updateDeviceToken()
-                        } else {
-                            
-                            NSLog("登录失败")
-                            UITools.sharedInstance.toast("用户名或密码错误")
-                        }
+                        print("登录成功")
+                        let userDefaults = NSUserDefaults.standardUserDefaults()
+                        userDefaults.setObject(phoneNumber, forKey: "phoneNumber")
+                        userDefaults.setObject(validationCode!.md5, forKey: "validationCode")
+                        userDefaults.setBool(true, forKey: "isLogin")
+                        userDefaults.synchronize()
+                        
+                        let homeVC = self.storyboard?.instantiateViewControllerWithIdentifier("HomeViewController") as! HomeViewController
+                        let window = UIApplication.sharedApplication().keyWindow
+                        window?.rootViewController = homeVC
+                        
+                        //上传token
+                        //Tools.sharedInstance.updateDeviceToken()
+                    } else {
+                        UITools.sharedInstance.toast("用户名或密码错误")
                     }
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
                 }
-        }
+        })
     }
 
 }

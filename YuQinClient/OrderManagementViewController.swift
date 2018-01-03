@@ -11,6 +11,7 @@ import pop
 import Alamofire
 import MJRefresh
 import STPopup
+import SwiftyJSON
 
 class OrderManagementViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
@@ -40,7 +41,8 @@ class OrderManagementViewController: UIViewController, UITableViewDataSource, UI
     let cellForOrderManagement = "CellForOrderManagement"
     let cellForEndOrderManagement = "CellForEndOrderManagement"
     
-    var orderList = [Dictionary<String, AnyObject>]()
+    var orderList: [JSON] = { [JSON]() }()
+    var orderEvaluateStatusDict: [Int : Bool] = { [Int : Bool]() }()
     var currentPage = 1
     var pageCount = 0
     
@@ -112,18 +114,18 @@ class OrderManagementViewController: UIViewController, UITableViewDataSource, UI
             if selectedMenuItemIndex == 2 {
                 cell = tableView.dequeueReusableCellWithIdentifier(cellForEndOrderManagement, forIndexPath: indexPath) as! EndOrderManagementTableViewCell
                 let cell1 = cell as! EndOrderManagementTableViewCell
-                let dict = orderList[indexPath.row]
-                cell1.label1.text = dict["time"] as? String
-                cell1.label2.text = dict["fromAddress"] as? String
-                cell1.label3.text = dict["toAddress"] as? String
-                if let toAddress = dict["toAddress"] as? String where !toAddress.isEmpty {
+                let order = orderList[indexPath.row]
+                cell1.label1.text = order["time"].string
+                cell1.label2.text = order["fromAddress"].string
+                cell1.label3.text = order["toAddress"].string
+                if let toAddress = order["toAddress"].string where !toAddress.isEmpty {
                     cell1.icon3Height.constant = 20
                     cell1.label3TopSpace.constant = 8
                 } else {
                     cell1.icon3Height.constant = 0
                     cell1.label3TopSpace.constant = 0
                 }
-                var passenger = dict["otherPassenger"] as? String
+                var passenger = order["otherPassenger"].string
                 if passenger == nil || passenger!.isEmpty {
                     let userDefault = NSUserDefaults.standardUserDefaults()
                     if let phoneNumber = userDefault.stringForKey(Constant.KeyForPhoneNumber) {
@@ -135,7 +137,7 @@ class OrderManagementViewController: UIViewController, UITableViewDataSource, UI
                 if cell1.button != nil {
                     
                     cell1.button.tag = indexPath.row
-                    if let isOrderEvaluated = dict["isOrderEvaluated"] as? Bool {
+                    if let isOrderEvaluated = orderEvaluateStatusDict[order["id"].int!] {
                         cell1.button.hidden = false
                         cell1.button.setTitle(isOrderEvaluated ? "已评价" : "评价", forState: .Normal)
                         
@@ -148,18 +150,18 @@ class OrderManagementViewController: UIViewController, UITableViewDataSource, UI
             } else {
                 cell = tableView.dequeueReusableCellWithIdentifier(cellForOrderManagement, forIndexPath: indexPath) as! OrderManagementTableViewCell
                 let cell1 = cell as! OrderManagementTableViewCell
-                let dict = orderList[indexPath.row]
-                cell1.label1.text = dict["time"] as? String
-                cell1.label2.text = dict["fromAddress"] as? String
-                cell1.label3.text = dict["toAddress"] as? String
-                if let toAddress = dict["toAddress"] as? String where !toAddress.isEmpty {
+                let order = orderList[indexPath.row]
+                cell1.label1.text = order["time"].string
+                cell1.label2.text = order["fromAddress"].string
+                cell1.label3.text = order["toAddress"].string
+                if let toAddress = order["toAddress"].string where !toAddress.isEmpty {
                     cell1.icon3Height.constant = 20
                     cell1.label3TopSpace.constant = 8
                 } else {
                     cell1.icon3Height.constant = 0
                     cell1.label3TopSpace.constant = 0
                 }
-                var passenger = dict["otherPassenger"] as? String
+                var passenger = order["otherPassenger"].string
                 if passenger == nil || passenger!.isEmpty {
                     let userDefault = NSUserDefaults.standardUserDefaults()
                     if let phoneNumber = userDefault.stringForKey(Constant.KeyForPhoneNumber) {
@@ -183,8 +185,8 @@ class OrderManagementViewController: UIViewController, UITableViewDataSource, UI
             
         } else {
             let vc = storyboard?.instantiateViewControllerWithIdentifier("OrderDetailViewController") as! OrderDetailViewController
-            let dict = orderList[indexPath.row]
-            vc.orderId = dict["id"] as! Int
+            let order = orderList[indexPath.row]
+            vc.orderId = order["id"].int
             self.navigationItem.backBarButtonItem = UIBarButtonItem(title: "返回", style: .Plain, target: nil, action: nil)
             self.navigationController?.pushViewController(vc, animated: true)
         }
@@ -254,7 +256,7 @@ class OrderManagementViewController: UIViewController, UITableViewDataSource, UI
     func popupRatingController(sender: UIButton) {
         
         let vc = storyboard?.instantiateViewControllerWithIdentifier("RatingViewController") as! RatingViewController
-        vc.dataDict = orderList[sender.tag]
+        vc.dataDict = orderList[sender.tag].dictionaryObject
         vc.dataDict["indexInList"] = sender.tag
         vc.title = "订单评分"
         let width = UIApplication.sharedApplication().keyWindow?.frame.size.width
@@ -264,7 +266,7 @@ class OrderManagementViewController: UIViewController, UITableViewDataSource, UI
         popupVC = STPopupController(rootViewController: vc)
         popupVC.style = .BottomSheet
         popupVC.presentInViewController(self)
-        popupVC.backgroundView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapPopupControllerBackground(_:))))
+        popupVC.backgroundView!.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapPopupControllerBackground(_:))))
     }
     
     func onTapPopupControllerBackground(sender: UITapGestureRecognizer) {
@@ -278,151 +280,64 @@ class OrderManagementViewController: UIViewController, UITableViewDataSource, UI
         }
         let orderId = dataDict["id"] as! Int
         let grade = dataDict["grade"] as! Int
+        let indexInList = dataDict["indexInList"] as! Int
         
-        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
-            return
-        }
-        //url和参数
-        let url = Constant.HOST_PATH + "/OrderApp_evaluateOrder.action"
-        let parameters = ["phoneNumber" : phoneNumber,
-                          "validationCode" : validationCode,
-                          "orderId" : orderId,
-                          "grade" : grade]
-        
-        //等待动画
-        let HUD = UITools.sharedInstance.showLoadingAnimation()
-        
-        Alamofire.request(.GET, url, parameters: parameters as? [String : AnyObject])
-            .responseJSON { response in
-                print("OrderApp_evaluateOrder.action request: \(response.request)")
-                
-                //取消等待动画
-                HUD.hide(true)
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("evaluate order by orderId(\(orderId))  result: \(value)")
-                    
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
-                        
-                    } else if let status = value["status"] as? Bool {
-                        self.orderList[dataDict["indexInList"] as! Int]["isOrderEvaluated"] = status
-                        self.orderTableView.reloadData()
-                    }
-                    
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
+        URLConnector.request(Router.evaluateOrder(orderId: "\(orderId)", grade: "\(grade)"), successCallBack: { value in
+            if let status = value["status"].bool {
+                if status {
+                    self.orderEvaluateStatusDict[self.orderList[indexInList]["id"].int!] = status
+                    self.orderTableView.reloadData()
+                } else {
+                    UITools.sharedInstance.toast("评价订单失败，请重试")
                 }
-        }
+            }
+        })
     }
     
     func getOrderEvaluationStatus(indexInList: Int) {
         
-        let orderId = orderList[indexInList]["id"] as! Int
+        let orderId = orderList[indexInList]["id"].int
         
-        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
-            return
-        }
-        //url和参数
-        let url = Constant.HOST_PATH + "/OrderApp_isOrderEvaluated.action"
-        let parameters = ["phoneNumber" : phoneNumber,
-                          "validationCode" : validationCode,
-                          "orderId" : orderId]
-        
-        Alamofire.request(.GET, url, parameters: parameters as? [String : AnyObject])
-            .responseJSON { response in
-                print("OrderApp_isOrderEvaluated.action request: \(response.request)")
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("get order evaluate status by orderId(\(orderId)) result: \(value)")
+        URLConnector.request(Router.isOrderEvaluated(orderId: "\(orderId)"), successCallBack: { value in
+            if let status = value["status"].bool {
+                if status {
+                    self.orderEvaluateStatusDict[self.orderList[indexInList]["id"].int!] = status
+                    self.orderTableView.reloadData()
+                } else {
                     
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
-                        
-                    } else if let status = value["status"] as? Bool {
-                        self.orderList[indexInList]["isOrderEvaluated"] = status
-                        self.orderTableView.reloadData()
-                    }
-                    
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
                 }
-        }
+            }
+        })
     }
     
     func getOrdersByStatus(isLoadMore: Bool) {
         
-        guard let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
-            return
-        }
-        //url和参数
-        let url = Constant.HOST_PATH + "/OrderApp_getOrdersByStatus.action"
-        let parameters = ["phoneNumber" : phoneNumber,
-                          "validationCode" : validationCode,
-                          "orderStatus" : orderStatus[selectedMenuItemIndex],
-                          "pageNum" : currentPage]
-        
-        Alamofire.request(.GET, url, parameters: parameters as? [String : AnyObject])
-            .responseJSON { response in
-                
-                switch (response.result) {
-                case .Success(let value):
-                    print("get orders by status result: \(value)")
-                    
-                    if let status = value["status"] as? String {
-                        if status == UNAUTHORIZED {
-                            NSLog("\(url) 无权限")
-                        } else if status == BAD_PARAMETER {
-                            NSLog("\(url) 参数错误")
-                        }
-                        
-                    } else if let data = value as? Dictionary<String, AnyObject> {
-                        
-                        self.currentPage = data["currentPage"] as! Int
-                        self.pageCount = data["pageCount"] as! Int
-                        if let list = data["recordList"] as? [Dictionary<String, AnyObject>] {
-                            if isLoadMore {
-                                self.orderList.appendContentsOf(list)
-                            } else {
-                                self.orderList = list
-                                //                                    self.orderTableView.mj_header.endRefreshing()
-                            }
-                            self.orderTableView.reloadData()
-                            
-                            print("self.orderList.count:\(self.orderList.count)")
-                            self.orderList.count == 0 ? self.showTipForNoData() : UITools.sharedInstance.hideNoDataTipFromView(self.orderTableView)
-                            
-                        }
-                        
-                        //如果是历史行程就获取订单是否已评分
-                        if self.selectedMenuItemIndex == 2 {
-                            for indexInList in 0..<self.orderList.count {
-                                self.getOrderEvaluationStatus(indexInList)
-                            }
-                        }
+        URLConnector.request(Router.getOrdersByStatus(orderStatus: orderStatus[selectedMenuItemIndex], pageNum: "\(currentPage)"), successCallBack: { value in
+            if let page = value.dictionary {
+                self.currentPage = page["currentPage"]!.int!
+                self.pageCount = page["pageCount"]!.int!
+                if let list = page["recordList"]?.array {
+                    if isLoadMore {
+                        self.orderList.appendContentsOf(list)
+                    } else {
+                        self.orderList = list
                     }
+                    self.orderTableView.mj_header.endRefreshing()
+                    self.orderTableView.reloadData()
                     
-                case .Failure(let error):
-                    NSLog("Error: %@", error)
+                    print("self.orderList.count:\(self.orderList.count)")
+                    self.orderList.count == 0 ? self.showTipForNoData() : UITools.sharedInstance.hideNoDataTipFromView(self.orderTableView)
                     
-                    UITools.sharedInstance.toast("获取数据失败，请重试")
                 }
                 
-                self.orderTableView.mj_header.endRefreshing()
-        }
+                //如果是历史行程就获取订单是否已评分
+                if self.selectedMenuItemIndex == 2 {
+                    for indexInList in 0..<self.orderList.count {
+                        self.getOrderEvaluationStatus(indexInList)
+                    }
+                }
+            }
+        })
     }
     
     func refreshData() {

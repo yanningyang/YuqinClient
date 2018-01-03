@@ -19,15 +19,22 @@ public let BAIDUMAP_KEY = "lz2EosqOLhZ64l1jhjdYQgKW"
 
 public class Constant {
     
-    //测试服务器地址
-//    public static let HOST_NAME = "http://172.20.143.60"
+    /// MARK -- 接口地址
+    #if DEBUG
+    // 开发环境
     public static let HOST_NAME = "http://101.201.31.147"
+    #else
+    // 生产环境
+    public static let HOST_NAME = "http://oa.yuqinqiche.com"
+    #endif
+    
     public static let HOST_PATH = HOST_NAME + "/orderapp"
+    
     //检查版本地址
     public static let CheckUpdateUrl = HOST_NAME + "/apk/CustomerAPPUpdate.xml"
     
-    //百度资源
-    public static let MYBUNDLE_NAME = "mapapi.bundle"
+    //公司ID
+    public static let COMPANY_ID = "1"
     
     //CollectionView高度
     public static let CollectionViewHeight: CGFloat = 90

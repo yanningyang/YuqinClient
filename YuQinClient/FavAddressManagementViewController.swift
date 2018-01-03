@@ -8,12 +8,13 @@
 
 import UIKit
 import Alamofire
+import SwiftyJSON
 
 class FavAddressManagementViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
     @IBOutlet weak var tableView: UITableView!
     
-    var favAddressList = [Dictionary<String, AnyObject>]()
+    var favAddressList: [JSON] = { [JSON]() }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,8 +55,9 @@ class FavAddressManagementViewController: UIViewController, UITableViewDataSourc
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("CellForFavAddressManagement", forIndexPath: indexPath)
-        cell.textLabel?.text = favAddressList[indexPath.row]["description"] as? String
-        cell.detailTextLabel?.text = favAddressList[indexPath.row]["detail"] as? String
+        cell.textLabel?.text = favAddressList[indexPath.row].string
+//        cell.textLabel?.text = favAddressList[indexPath.row]["description"].string
+//        cell.detailTextLabel?.text = favAddressList[indexPath.row]["detail"].string
         
         return cell
     }
@@ -78,88 +80,27 @@ class FavAddressManagementViewController: UIViewController, UITableViewDataSourc
     
     func getAllFavAddress() {
         
-        if let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty {
-            
-            //url和参数
-            let url = Constant.HOST_PATH + "/OrderApp_getAllFavoriateAddress.action"
-            let parameters = ["phoneNumber" : phoneNumber, "validationCode" : validationCode]
-            
-            Alamofire.request(.GET, url, parameters: parameters)
-                .responseJSON { response in
-                    
-                    switch (response.result) {
-                    case .Success(let value):
-                        print("get all fav address result: \(value)")
-                        
-                        if let status = value["status"] as? String {
-                            if status == UNAUTHORIZED {
-                                NSLog("\(url) 无权限")
-                            } else if status == BAD_PARAMETER {
-                                NSLog("\(url) 参数错误")
-                            }
-                            
-                        } else if let list = value as? [Dictionary<String, AnyObject>] {
-                            
-                            self.favAddressList = list
-                            self.tableView.reloadData()
-                            
-                            self.favAddressList.count == 0 ? UITools.sharedInstance.showNoDataTipToView(self.tableView, tipStr: "暂无常用地址") : UITools.sharedInstance.hideNoDataTipFromView(self.tableView)
-                        }
-                        
-                    case .Failure(let error):
-                        NSLog("Error: %@", error)
-                    }
+        URLConnector.request(Router.getAllFavoriateAddress, successCallBack: { value in
+            if let list = value.array {
+                self.favAddressList = list
+                self.tableView.reloadData()
+                
+                self.favAddressList.count == 0 ? UITools.sharedInstance.showNoDataTipToView(self.tableView, tipStr: "暂无常用地址") : UITools.sharedInstance.hideNoDataTipFromView(self.tableView)
             }
-        } else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
-        }
+        })
     }
     
     func deleteFavAddressByIndex(indexPath: NSIndexPath) {
         
-        if let (phoneNumber1, validationCode1) = Tools.sharedInstance.getUserInfo(), phoneNumber = phoneNumber1, validationCode = validationCode1 where !phoneNumber.isEmpty && !validationCode.isEmpty {
-            
-            //等待动画
-            let HUD = UITools.sharedInstance.showLoadingAnimation()
-            //url和参数
-            let url = Constant.HOST_PATH + "/OrderApp_deleteHistoryAddress.action"
-            let parameters = ["phoneNumber" : phoneNumber,
-                              "validationCode" : validationCode,
-                              "addressIndex" : favAddressList[indexPath.row]["index"] as! Int]
-            
-            Alamofire.request(.GET, url, parameters: parameters as? [String : AnyObject])
-                .responseJSON { response in
-                    
-                    //取消等待动画
-                    HUD.hide(true)
-                    
-                    switch (response.result) {
-                    case .Success(let value):
-                        print("delete fac address by index result: \(value)")
-                        
-                        if let status = value["status"] as? String {
-                            if status == UNAUTHORIZED {
-                                NSLog("\(url) 无权限")
-                            } else if status == BAD_PARAMETER {
-                                NSLog("\(url) 参数错误")
-                            }
-                            
-                        } else if let status = value["status"] as? Bool {
-                            
-                            if status {
-                                self.favAddressList.removeAtIndex(indexPath.row)
-                                self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
-                            } else {
-                                UITools.sharedInstance.toast("删除失败，请重试")
-                            }
-                        }
-                        
-                    case .Failure(let error):
-                        NSLog("Error: %@", error)
-                    }
+        URLConnector.request(Router.deleteHistoryAddress(address: favAddressList[indexPath.row].string!), successCallBack: { value in
+            if let status = value["status"].bool {
+                if status {
+                    self.favAddressList.removeAtIndex(indexPath.row)
+                    self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Fade)
+                } else {
+                    UITools.sharedInstance.toast("删除失败，请重试")
+                }
             }
-        } else {
-            Tools.sharedInstance.logout(self.storyboard!, withToast: true)
-        }
+        })
     }
 }
